@@ -1,0 +1,43 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title HIS - Sistema Hospitalario
+    link(rel="stylesheet" href="/../css/style.css")
+    link(
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" 
+      rel="stylesheet"
+    )
+  body
+    header
+      .logo-titulo
+        img.logo(src="img/logo.png" alt="logo")
+        h1 Hospital Central
+      nav
+        ul
+          li 
+            a(href="index") Inicio
+          li 
+            a(href="admision") Pacientes
+          li 
+            a(href="lista-pacientes") Lista de pacientes
+          li 
+            a(href="medicos") Médicos
+          li 
+            a(href="/camas/asignar_cama") Camas
+          li 
+            a(href="#") Citas
+          li 
+            a(href="enfermeria") Administración
+    main
+      .bienvenida
+        .imagen-con-texto
+          h1 Bienvenido a SistemHIS
+          button(onclick="window.location.href='emergencias.html'") Emergencias
+          .imagenes
+            img(src="img/hospital2.jpg" alt="hospital2")
+            img(src="img/hospital .jpg" alt="hospital")
+            img(src="img/hospital3.jpg" alt="hospital3")
+    footer
+      p © 2025 Hospital Central. Todos los derechos reservados a @Maria Lourdes Villegas
