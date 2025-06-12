@@ -127,12 +127,12 @@ html(lang="es")
         background: #d5f5e3; 
       }
       .cam.ocupada { 
-        background: #f5b7b1; 
+        background:rgb(247, 155, 146); 
       }
       .cam.higienizando { 
-        background: #fcf3cf; 
+        background:rgb(252, 225, 121); 
       }
-      .cama.seleccionada {
+      .cam.seleccionada {
         border: 2px solid blue;
         transform: scale(1.1);
       }
@@ -157,6 +157,9 @@ html(lang="es")
         border-top: 2px solid #ff5555;
         padding-top: 20px;
       }
+      select{
+        width: 100%;
+      }
 
   body
     header
@@ -174,8 +177,8 @@ html(lang="es")
         select#tipoIngreso(name="tipoIngreso")
             option(value="") -- Seleccione tipo ingreso --
             option(value="guardia") Guardia 
-            option(value="cita_programada") Cita Programada 
-            option(value="derivaciones_medica") Derivacion Medica
+            option(value="cita programada") Cita Programada 
+            option(value="derivaciones medica") Derivacion Medica
             option(value="emergencias") Emergencias
         br
         br
@@ -196,7 +199,7 @@ html(lang="es")
                             h2 Habitacion #{habitacion.id}  
                             .cam-container 
                                 each cama in habitacion.camas 
-                                    .cam(data-id=cama.id)
+                                    .cam(data-id=cama.id data-estado=cama.estado)
                                         h2= cama.id 
                                         img(src="/img/cama.png" alt=`Cama ${cama.id}`)
           
@@ -218,10 +221,10 @@ html(lang="es")
     script(src="https://code.jquery.com/jquery-3.6.0.min.js")
     script.
       let camaSeleccionadaId = null;
-    
+
 
       function cargarPacientes() {
-        fetch('/pacientes-disponibles')
+        fetch('/pacientes/disponibles')
           .then(response => {
             console.log('Respuesta fetch pacinetes: ', response);
             if (!response.ok) {
@@ -242,6 +245,16 @@ html(lang="es")
             alert('No se pudo cargar la lista de pacientes.');
           });
       }
+      $('.cam').each(function () {
+        const estado = $(this).data('estado');
+        if (estado === 'ocupada') {
+          $(this).addClass('ocupada').css('pointer-events', 'none');
+        } else if (estado === 'higienizando') {
+          $(this).addClass('higienizando').css('pointer-events', 'none');
+        } else {
+          $(this).addClass('libre');
+        }
+      });
 
       $(document).ready(function () {
         $('.asignar-paciente').hide();
@@ -249,8 +262,7 @@ html(lang="es")
         $('.cam').on('click', function () {
           $('.cam').removeClass('seleccionada');
           $(this).addClass('seleccionada');
-          $('.asginar-paciente').show();
-          $('#selectPaciente').append('<option value="3">Paciente prueba 3</option>');
+          $('.asignar-paciente').show();
 
           camaSeleccionadaId = $(this).data('id');
           if (!camaSeleccionadaId) {
@@ -258,31 +270,35 @@ html(lang="es")
             return;
           }
 
-          cargarPacientes(); 
-          $('.asignar-paciente').show();
+          cargarPacientes();
         });
 
         $('#btnAsignarPaciente').on('click', function () {
           const pacienteId = $('#selectPaciente').val();
+          const tipoIngresoSeleccionado = $('#tipoIngreso').val();
+
           if (!camaSeleccionadaId || !pacienteId) {
             alert('Seleccione una cama y un paciente');
+            return;
+          }
+          if (!tipoIngresoSeleccionado) {
+            alert('Seleccione un tipo de ingreso');
             return;
           }
 
           fetch('/camas/asignar-paciente', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               camaId: camaSeleccionadaId,
-              pacienteId: pacienteId
+              pacienteId: pacienteId,
+              tipo_ingreso: tipoIngresoSeleccionado
             })
           })
           .then(response => {
             if (response.ok) {
               alert('Paciente asignado con éxito');
-              location.reload(); 
+              location.reload();
             } else {
               alert('Error al asignar paciente');
             }
@@ -290,6 +306,18 @@ html(lang="es")
           .catch(error => {
             console.error(error);
             alert('Hubo un problema al asignar el paciente.');
+          });
+        });
+
+        $('.menu button').on('click', function () {
+          const filtro = $(this).attr('name');
+
+          $('.cam').each(function () {
+            if (filtro === 'todos' || $(this).hasClass(filtro)) {
+              $(this).show();
+            } else {
+              $(this).hide();
+            }
           });
         });
       });

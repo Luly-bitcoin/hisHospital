@@ -1,0 +1,82 @@
+extends layout
+
+block content
+  style.
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #ff9999, rgba(255,255,255,0.8));
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 0;
+      height: 640px;
+    }
+
+    .formulario-box {
+      background-color: #fff0f0;
+      border: 2px solid #cc0000;
+      border-radius: 12px;
+      padding: 30px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 0 12px rgba(204, 0, 0, 0.3);
+    }
+
+    h2 {
+      color: #cc0000;
+      text-align: center;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+      color: #660000;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      border: 1px solid #cc0000;
+      font-size: 15px;
+    }
+
+    button {
+      background-color: #cc0000;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #990000;
+    }
+
+  .formulario-box
+    h2 Registro de Paciente en Emergencia
+
+    form(action="/emergencias/guardar" method="POST")
+      label(for="id_cama") Cama de Emergencia:
+      select(name="id_cama" required)
+        option(value="") Seleccionar cama
+        each cama in camasEmergencia
+          option(value=cama.id) Cama #{cama.id}
+
+      label(for="sexo") Sexo:
+      select(name="sexo" required)
+        option(value="") Seleccionar
+        option(value="Femenino") Femenino
+        option(value="Masculino") Masculino
+        option(value="No identificado") No identificado
+
+      label(for="observacion") Observación:
+      textarea(name="observacion" rows="4" required placeholder="Describa el estado del paciente...")
+
+      button(type="submit") Registrar Paciente de Emergencia

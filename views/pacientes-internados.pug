@@ -1,0 +1,231 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Lista de Pacientes Internados y Emergencia
+    link(rel="stylesheet", href="/css/style.css")
+    style.
+      #internados-container, #emergencia-container {
+        margin: 20px auto;
+        max-width: 1000px;
+        padding: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+      }
+      th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background: #f2f2f2;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      button {
+        background: #d9534f;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #c9302c;
+      }
+      #buscador, #buscador-emergencia {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 15px;
+        font-size: 16px;
+      }
+      tr.desaparecer {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+
+  body
+    header
+      img(src="/img/logo.png", alt="Logo del Hospital")
+      h1 Pacientes Internados y en Emergencia
+    br
+    br
+
+    // Tabla pacientes internados
+    h2 Lista de Pacientes Internados
+    #internados-container
+      input#buscador(type="text", placeholder="Buscar paciente internado...")
+      table
+        thead
+          tr
+            th Nombre
+            th DNI
+            th Ala
+            th Habitación
+            th Cama
+            th Fecha de Ingreso
+            th Acción
+        tbody#internados-lista
+
+    // Tabla pacientes en emergencia
+    h2 Lista de Pacientes en Camas de Emergencia
+    #emergencia-container
+      input#buscador-emergencia(type="text", placeholder="Buscar paciente en emergencia...")
+      table
+        thead
+          tr
+            th Observacion
+            th DNI
+            th Cama
+            th Fecha Ingreso
+            th Acción
+        tbody#emergencia-lista
+
+    script.
+      let pacientesGlobal = [];
+      let pacientesEmergenciaGlobal = [];
+
+      // Cargar pacientes internados
+      async function cargarPacientesInternados() {
+        const res = await fetch('/internaciones/internados');
+        pacientesGlobal = await res.json();
+        renderizarPacientes(pacientesGlobal);
+      }
+
+      // Renderizar pacientes internados
+      function renderizarPacientes(pacientes) {
+        const lista = document.getElementById('internados-lista');
+        lista.innerHTML = '';
+
+        if (pacientes.length === 0) {
+          lista.innerHTML = '<tr><td colspan="7">No hay pacientes internados actualmente.</td></tr>';
+          return;
+        }
+
+        pacientes.forEach(p => {
+          const fila = document.createElement('tr');
+          fila.id = `fila-${p.dni}`;
+          fila.innerHTML = `
+            <td>${p.nombre_completo}</td>
+            <td>${p.dni}</td>
+            <td>${p.ala_nombre}</td>
+            <td>${p.id_habitacion}</td>
+            <td>${p.id_cama}</td>
+            <td>${new Date(p.fecha_ingreso).toLocaleString()}</td>
+            <td><button onclick="darAlta('${p.internacion_id}', '${p.cama_id}', '${p.dni}')">Dar Alta</button></td>
+          `;
+          lista.appendChild(fila);
+        });
+      }
+
+      // Dar alta paciente internado
+      async function darAlta(internacionId, camaId, dni) {
+        const confirmar = confirm("¿Deseás dar de alta al paciente?");
+        if (!confirmar) return;
+
+        const res = await fetch('/internaciones/dar-alta', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ internacion_id: internacionId, cama_id: camaId })
+        });
+
+        const data = await res.json();
+        alert(data.mensaje);
+
+        const fila = document.getElementById(`fila-${dni}`);
+        fila.classList.add('desaparecer');
+        setTimeout(() => fila.remove(), 500);
+      }
+
+      // Buscador pacientes internados
+      document.getElementById('buscador').addEventListener('input', e => {
+        const termino = e.target.value.toLowerCase();
+        const filtrados = pacientesGlobal.filter(p =>
+          p.nombre_completo.toLowerCase().includes(termino) ||
+          p.dni.toLowerCase().includes(termino)
+        );
+        renderizarPacientes(filtrados);
+      });
+
+      async function cargarPacientesEmergencia() {
+        const res = await fetch('/internaciones/emergencia');
+        pacientesEmergenciaGlobal = await res.json();
+        renderizarPacientesEmergencia(pacientesEmergenciaGlobal);
+      }
+
+      function renderizarPacientesEmergencia(pacientes) {
+        const listaEmergencia = document.getElementById('emergencia-lista');
+        listaEmergencia.innerHTML = '';
+
+        if (pacientes.length === 0) {
+          listaEmergencia.innerHTML = '<tr><td colspan="6">No hay pacientes en camas de emergencia actualmente.</td></tr>';
+          return;
+        }
+
+        pacientes.forEach(p => {
+          const fila = document.createElement('tr');
+          fila.id = `fila-emergencia-${p.emergencia_id}`;
+          fila.innerHTML = `
+            <td>${p.observacion}</td>
+            <td>${p.dni_falso}</td>
+            <td>${p.id_cama}</td>
+            <td>${new Date(p.fecha_ingreso).toLocaleString()}</td>
+            <td>
+                <button onclick="editarPaciente('${p.id_emergencia}')">Editar</button>
+                <button disabled id="btn-trasladar-${p.id_emergencia}">Trasladar</button>
+                <button disabled id="btn-alta-${p.id_emergencia}" onclick="darAltaEmergencia('${p.emergencia_id}', '${p.cama_emergencia_id}', '${p.dni}')">Dar Alta</button>
+            </td>
+          `;
+          listaEmergencia.appendChild(fila);
+        });
+      }
+
+      async function darAltaEmergencia(emergenciaId, camaEmergenciaId, dni) {
+        const confirmar = confirm("¿Deseás dar de alta al paciente de emergencia?");
+        if (!confirmar) return;
+
+        const res = await fetch('/internaciones/dar-alta-emergencia', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emergencia_id: emergenciaId, cama_id: camaEmergenciaId })
+        });
+
+        const data = await res.json();
+        alert(data.mensaje);
+
+        const fila = document.getElementById(`fila-emergencia-${emergenciaId}`);
+        fila.classList.add('desaparecer');
+        setTimeout(() => fila.remove(), 500);
+      }
+
+      // Buscador pacientes emergencia
+      document.getElementById('buscador-emergencia').addEventListener('input', e => {
+        const termino = e.target.value.toLowerCase();
+        const filtrados = pacientesEmergenciaGlobal.filter(p =>
+          p.observacion.toLowerCase().includes(termino) ||
+          p.dni_falso.toLowerCase().includes(termino)
+        );
+        renderizarPacientesEmergencia(filtrados);
+      });
+
+      window.onload = () => {
+        cargarPacientesInternados();
+        cargarPacientesEmergencia();
+      };
+
+
+      function editarPaciente(idEmergencia){
+        const nuevaObservacion = prompt("Ingrese nueva observacion: ");
+
+        if(nuevaObservacion !== null){
+            document.getElementById(`btn-trasladar-${idEmergencia}`).disabled = false;
+            document.getElementById(`btn-alta-${idEmergencia}`).disabled = false;
+
+            alert("Paciente editado. Ahora puede trasladar o dar el alta");
+        }
+      }
