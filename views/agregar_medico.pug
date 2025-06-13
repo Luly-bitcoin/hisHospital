@@ -1,0 +1,93 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    title Agregar Médico
+    link(rel="stylesheet" href="/css/style.css")
+    style.
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f0f8ff;
+        padding: 40px;
+      }
+
+      h2 {
+        margin-bottom: 20px;
+      }
+
+      form {
+        max-width: 600px;
+        margin: auto;
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      }
+
+      label {
+        display: block;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      input, select {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      .botones {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 25px;
+      }
+
+      .botones button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .guardar {
+        background-color: #2a8df2;
+        color: white;
+      }
+
+      .cancelar {
+        background-color: #ccc;
+        color: black;
+      }
+
+  body
+    h2 Agregar Nuevo Médico
+
+    form(method="POST", action="/medicos/nuevo")
+      label(for="nombre") Nombre y Apellido
+      input(type="text", name="nombre", required)
+
+      label(for="correo") Correo
+      input(type="email", name="correo", required)
+
+      label(for="sexo") Sexo
+      select(name="sexo", required)
+        option(value="") Seleccioná una opción
+        option(value="Masculino") Masculino
+        option(value="Femenino") Femenino
+
+      label(for="matricula") Matrícula
+      input(type="text", name="matricula", required)
+
+      label(for="dni") DNI
+      input(type="text", name="dni", required)
+
+      label(for="especialidad") Especialidad
+      input(type="text", name="especialidad", required)
+
+      .botones
+        button.guardar(type="submit") Guardar
+        button.cancelar(type="button", onclick="window.location.href='/medicos/lista'") Cancelar

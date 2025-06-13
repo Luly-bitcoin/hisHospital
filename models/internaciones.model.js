@@ -2,11 +2,11 @@ import pool from '../config/db.js';
 
 export async function obtenerPacientesDisponibles() {
   const [result] = await pool.query(`
-    SELECT p.id, p.nombre_completo
-    FROM pacientes p
-    WHERE NOT EXISTS (
-      SELECT 1 FROM internaciones i
-      WHERE i.dni_pacientes = p.id AND i.fecha_egreso IS NULL
+    SELECT * FROM pacientes
+    WHERE dni NOT IN (
+      SELECT dni_pacientes FROM internaciones WHERE fecha_egreso IS NULL
+      UNION
+      SELECT dni_pacientes FROM emergencias WHERE fecha_egreso IS NULL
     )
   `);
   return result;

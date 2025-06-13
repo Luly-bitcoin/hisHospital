@@ -1,0 +1,134 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    title Lista de Médicos
+    link(rel="stylesheet" href="/css/style.css")
+    style.
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f0f8ff;
+        padding: 40px;
+      }
+
+      .titulo {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .boton-agregar {
+        padding: 10px 20px;
+        background-color: #2a8df2;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      #buscador {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      }
+
+      th, td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #e6f0ff;
+      }
+
+      .acciones button {
+        margin-right: 5px;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .editar {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .borrar {
+        background-color: #f44336;
+        color: white;
+      }
+
+  body
+    .titulo
+      h2 Lista de Médicos
+      button.boton-agregar(type="button", onclick="window.location.href='/medicos/nuevo'") + Agregar Médico
+
+    input#buscador(type="text", placeholder="Buscar por nombre, correo o DNI...", oninput="filtrarMedicos()")
+
+    table
+      thead
+        tr
+          th Nombre y Apellido
+          th Correo
+          th Sexo
+          th Matrícula
+          th DNI
+          th Especialidad
+          th Acciones
+      tbody#tabla-medicos
+        each medico in medicos
+          tr
+            td #{medico.nombre}
+            td #{medico.correo}
+            td #{medico.sexo}
+            td #{medico.matricula}
+            td #{medico.dni}
+            td #{medico.especialidad}
+            td.acciones
+              button.editar(type="button", onclick=`window.location.href='/medicos/editar/${medico.dni}'`) Editar
+              button.borrar(type="button", onclick=`eliminar(${medico.dni})`) Eliminar
+
+    script.
+      function filtrarMedicos() {
+        const texto = document.getElementById("buscador").value.toLowerCase();
+        const filas = document.querySelectorAll("#tabla-medicos tr");
+
+        filas.forEach(fila => {
+          const contenido = fila.textContent.toLowerCase();
+          fila.style.display = contenido.includes(texto) ? "" : "none";
+        });
+      }
+
+
+      function eliminar(dni) {
+        if (!confirm("¿Seguro que querés eliminar este médico?")) return;
+
+        fetch(`/medicos/eliminar/${dni}`, {
+          method: 'DELETE'
+        })
+          .then(res => {
+            if (res.ok) {
+              alert("Médico eliminado correctamente");
+              location.reoad();
+            } else {
+              alert("Hubo un error al eliminar el médico");
+            }
+          })
+          .catch(err => {
+            console.error("Error:", err);
+            //alert("Error al eliminar");
+          });
+      }

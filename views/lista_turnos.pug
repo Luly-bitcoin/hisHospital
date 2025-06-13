@@ -1,0 +1,69 @@
+extends layout
+
+block content
+  .contenedor
+    img.logo-flotante(src="/img/logo.png" alt="Logo")
+    br
+    br
+    h2 Lista de Turnos
+    br
+    if turnos.length === 0
+      p No hay turnos registrados.
+    else
+      table.table-turnos
+        thead
+          tr
+            th Fecha
+            th Hora
+            th Paciente
+            th Médico (DNI)
+            th Especialidad
+            th Motivo
+        tbody
+          each turno in turnos
+            tr
+              td= new Date(turno.fecha_turno).toLocaleDateString('es-AR')
+              td= turno.hora_turno
+              td= turno.nombre_paciente
+              td= turno.dni_medico
+              td= turno.especialidad
+              td= turno.motivo
+    .cont-boton
+        button(type="button" class="boton" onclick="window.location='/'") volver
+        button(type="button" class="boton" onclick="window.location='/turnos/nuevo'") Agendar 
+
+  style.
+    body{
+        display: flex;
+        justify-content: center;
+    }
+    .table-turnos {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      margin-top: 15px;
+    }
+    .table-turnos th, .table-turnos td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    .table-turnos th {
+      background-color: #004a99;
+      color: white;
+    }
+    .table-turnos tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .table-turnos tr:hover {
+      background-color: #cce4ff;
+    }
+    .cont-boton{
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .boton{
+        margin-left: 20px;
+    }

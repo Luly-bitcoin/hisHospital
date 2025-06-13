@@ -1,0 +1,162 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    title Registrar Turno
+    link(rel="stylesheet", href="/css/style.css")
+    style.
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: linear-gradient(to bottom, #c2f0f7, rgba(255,255,255,0.8)), 
+                    url('/img/hospital2.jpg'), 
+                    url('/img/hospital.jpg'), 
+                    url('/img/hospital3.jpg');
+        background-repeat: no-repeat;
+        background-size: cover, 33.33% 100%, 33.33% 100%, 33.33% 100%;
+        background-position: center, left, center, right;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px 0;
+      }
+      .toast {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 8px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1000;
+        left: 50%;
+        bottom: 30px;
+        font-size: 16px;
+        opacity: 0;
+        transition: opacity 0.5s, bottom 0.5s;
+        transform: translateX(-50%);
+      }
+      .toast.show {
+        visibility: visible;
+        opacity: 1;
+        bottom: 50px;
+      }
+
+  body
+    .contenedor
+      img.logo-flotante(src="/img/logo.png" alt="Logo")
+      br
+      .formulario-box
+        h2 Registrar Turno
+        br
+        form(id="formTurno", action="/turnos/registrar" method="POST")
+          .input-group
+            label(for="dni_paciente") DNI Paciente
+            input#dni_paciente(type="text" name="dni_paciente" placeholder="Ej: 30123456" required)
+            button.boton(type="button" onclick="buscarPacienteTurno()") Buscar Paciente
+            #toast.toast
+
+          .input-group
+            label(for="nombre_paciente") Nombre del Paciente
+            input#nombre_paciente(type="text" name="nombre_paciente" readonly required)
+
+          .input-group
+            label(for="obra_social") Obra Social
+            input#obra_social(type="text" name="obra_social" readonly)
+
+          .input-group
+            label(for="telefono_contacto") Teléfono
+            input#telefono_contacto(type="text" name="telefono_contacto" readonly)
+
+          .input-group
+            label Fecha del Turno
+            input(type="date" name="fecha_turno" required)
+
+          .input-group
+            label Hora del Turno
+            input(type="time" name="hora_turno" required)
+
+          .input-group
+            label Especialidad
+            input(type="text" name="especialidad" required placeholder="Ej: Clínica médica")
+
+          .input-group
+            label Motivo
+            textarea(name="motivo" placeholder="Describir brevemente el motivo de la consulta" required)
+
+          .input-group
+            label Tipo de Turno
+            select(name="tipo_turno" required)
+              option(value="") Seleccionar
+              option(value="pendiente") Pendiente
+              option(value="confirmado") Confirmado 
+              option(value="asistido") Asistido 
+              option(value="recuperado") Recuperado 
+              option(value="cancelado") Cancelado
+
+          .input-group
+            label Médico
+            select(name="dni_medico" required)
+              option(value="") Seleccionar
+              each medico in medicos
+                option(value=medico.dni)= medico.nombre + " (" + medico.especialidad + ")"
+
+          button.boton(type="submit") Registrar Turno
+
+    script.
+        async function buscarPaciente() {
+            const dni = document.getElementById('dni_paciente').value;
+
+            if (!dni) return alert('Ingresá un DNI');
+
+            try {
+            const res = await fetch(`/pacientes/buscar/${dni}`);
+            const data = await res.json();
+
+            if (!data.existe) {
+                alert("El paciente no existe. Debe registrarlo primero.");
+                return;
+            }
+
+            document.getElementById('nombre_paciente').value = data.paciente.nombre_completo;
+            document.getElementById('obra_social').value = data.paciente.obra_social || '';
+            document.getElementById('telefono_contacto').value = data.paciente.telefono || '';
+
+            } catch (err) {
+            console.error(err);
+            alert("Error al buscar paciente.");
+            }
+        }
+      function mostrarToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      }
+
+      async function buscarPacienteTurno() {
+        const dni = document.getElementById('dni_paciente').value.trim();
+        if (!dni) return mostrarToast("Ingrese un DNI para buscar");
+
+        try {
+          const res = await fetch(`/admision/verificar-dni/${dni}`);
+          const data = await res.json();
+
+          if (data.existe) {
+            const p = data.paciente;
+            document.getElementById('nombre_paciente').value = p.nombre_completo;
+            document.getElementById('obra_social').value = p.obra_social;
+            document.getElementById('telefono_contacto').value = p.telefono;
+            mostrarToast("Paciente encontrado.");
+          } else {
+            mostrarToast("Paciente no encontrado.");
+            document.getElementById('nombre_paciente').value = "";
+            document.getElementById('obra_social').value = "";
+            document.getElementById('telefono_contacto').value = "";
+          }
+        } catch (error) {
+          console.error(error);
+          mostrarToast("Error al buscar paciente.");
+        }
+      }

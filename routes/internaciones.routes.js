@@ -3,7 +3,8 @@ import {
   obtenerPacientesInternados,
   darAltaPaciente,
   obtenerPacientesEmergencia,
-  darAltaEmergencia
+  darAltaEmergencia,
+  asignarDniReal
 } from '../controllers/internaciones.controller.js';
 
 const router = Router();
@@ -12,7 +13,8 @@ router.get('/internados', obtenerPacientesInternados);
 router.post('/dar-alta', darAltaPaciente);
 
 router.get('/emergencia', obtenerPacientesEmergencia);
-router.post('/dar-alta-emergencia', darAltaEmergencia);
+router.post('/alta-emergencia', darAltaEmergencia);
+router.post('/asignar-dni', asignarDniReal);
 
 router.get('/pacientes-internados', (req, res) => {
   res.render('pacientes-internados');

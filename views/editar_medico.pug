@@ -1,0 +1,82 @@
+extends layout
+
+block content
+  style.
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f8ff;
+      padding: 40px;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #2a8df2;
+    }
+    form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+    input[type="text"],
+    input[type="email"],
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 25px;
+      background-color: #2a8df2;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1a5ecc;
+    }
+    .cancelar {
+      margin-left: 15px;
+      background-color: #f44336;
+    }
+    .cancelar:hover {
+      background-color: #b82a1d;
+    }
+
+  h2 Editar Médico
+
+  form(action=`/medicos/editar/${medico.dni}`, method="POST")
+    label(for="nombre") Nombre:
+    input#nombre(type="text", name="nombre", required, value=medico.nombre)
+
+    label(for="correo") Correo:
+    input#correo(type="email", name="correo", required, value=medico.correo)
+
+    label(for="sexo") Sexo:
+    select#sexo(name="sexo", required)
+      option(value="Masculino") Masculino
+      option(value="Femenino") Femenino
+
+    label(for="matricula") Matrícula:
+    input#matricula(type="text", name="matricula", required, value=medico.matricula)
+
+    label(for="especialidad") Especialidad:
+    input#especialidad(type="text", name="especialidad", required, value=medico.especialidad)
+
+    button(type="submit") Guardar cambios
+    a.cancelar(href="/medicos/lista") Cancelar

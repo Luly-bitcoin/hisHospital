@@ -8,6 +8,18 @@ const router = express.Router();
 
 router.get('/asignar_cama', vistaAsignarCama);
 
+
+router.get('/asignar_cama', async (req, res) => {
+  try {
+    const alas = await obtenerAlasConCamas();
+    console.log(JSON.stringify(alas, null, 2));
+    res.render('asignar_cama', { alas });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error al obtener camas');
+  }
+});
+
 router.get('/pacientes-disponibles', async (req, res) => {
   try {
     const pacientes = await obtenerPacientesDisponibles();
@@ -33,15 +45,5 @@ router.post('/asignar-paciente', async (req, res) => {
 });
 
 
-router.get('/asignar_cama', async (req, res) => {
-  try {
-    const alas = await obtenerAlasConCamas();
-    console.log(JSON.stringify(alas, null, 2));
-    res.render('asignar_cama', { alas });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Error al obtener camas');
-  }
-});
 
 export default router;

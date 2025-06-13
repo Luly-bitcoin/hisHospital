@@ -1,4 +1,3 @@
-// internaciones.controller.js
 import pool from '../config/db.js';
 
 export async function obtenerPacientesInternados(req, res) {
@@ -70,24 +69,73 @@ export async function obtenerPacientesEmergencia(req, res) {
   }
 }
 
-// Nueva función para dar alta en emergencia
 export async function darAltaEmergencia(req, res) {
-  const { emergencia_id, cama_id } = req.body;
+  const {id_emergencia, cama_id} = req.body;
+  console.log('BODY: ', req.body);
 
+  if(!id_emergencia || !cama_id){
+    return res.status(400).json({mensaje: 'faltan datos'});
+  }
+
+  const emergencia_id = Number(id_emergencia);
+  const idCama = Number(cama_id);
+
+  if(isNaN(emergencia_id) || isNaN(idCama)){
+    return res.status(400).json({mensaje: 'datos invalidos'});
+  }
+
+  console.log('Datos recibidos: ', {emergencia_id, idCama});
   try {
-    await pool.query(
-      'UPDATE emergencias SET fecha_egreso = NOW() WHERE id = ? AND cama_id = ?',
-      [emergencia_id, cama_id]
+    const [updateEmergencia] = await pool.query(
+      'UPDATE emergencias SET fecha_egreso = NOW() WHERE id_emergencia = ? AND id_cama = ? AND fecha_egreso IS NULL',
+      [emergencia_id, idCama]
     );
 
-    await pool.query(
-      'UPDATE camas_emergencia SET estado = "higienizando" WHERE id = ?',
-      [cama_id]
+    const [updateCama] = await pool.query(
+      'UPDATE camas SET estado = "higienizando" WHERE id = ?',
+      [idCama]
     );
+
+    console.log('filas afectadas: ', updateEmergencia.affectedRows);
+    console.log('Cama actualizada: ', updateCama.affectedRows);
 
     res.json({ mensaje: 'Paciente dado de alta de emergencia correctamente.' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al dar alta de emergencia' });
+  }
+}
+
+export async function asignarDniReal(req, res) {
+  const { id_emergencia, nuevo_dni } = req.body;
+
+  console.log("datos recibidos en asignar dni real: ", req.body);
+
+  if(!id_emergencia || !nuevo_dni){
+    return res.status(500).json({error: 'faltan datos'});
+  }
+  if(isNaN(nuevo_dni)){
+    return res.status(400).json({error: 'dni invalido'});
+  }
+
+  try {
+    const [pacientes] = await pool.query(
+      'SELECT * FROM pacientes WHERE dni = ?',
+      [nuevo_dni]
+    );
+
+    if (pacientes.length === 0) {
+      return res.status(400).json({ error: 'El DNI ingresado no existe en la base de pacientes.' });
+    }
+
+    await pool.query(
+      'UPDATE emergencias SET dni_falso = ? WHERE id_emergencia = ?',
+      [nuevo_dni, id_emergencia]
+    );
+
+    res.json({ mensaje: 'DNI real asignado correctamente.' });
+  } catch (error) {
+    console.error('Error al asignar DNI real:', error);
+    res.status(500).json({ error: 'Error interno al asignar el DNI.' });
   }
 }

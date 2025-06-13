@@ -56,7 +56,6 @@ html(lang="es")
     br
     br
 
-    // Tabla pacientes internados
     h2 Lista de Pacientes Internados
     #internados-container
       input#buscador(type="text", placeholder="Buscar paciente internado...")
@@ -72,7 +71,6 @@ html(lang="es")
             th Acción
         tbody#internados-lista
 
-    // Tabla pacientes en emergencia
     h2 Lista de Pacientes en Camas de Emergencia
     #emergencia-container
       input#buscador-emergencia(type="text", placeholder="Buscar paciente en emergencia...")
@@ -90,14 +88,12 @@ html(lang="es")
       let pacientesGlobal = [];
       let pacientesEmergenciaGlobal = [];
 
-      // Cargar pacientes internados
       async function cargarPacientesInternados() {
         const res = await fetch('/internaciones/internados');
         pacientesGlobal = await res.json();
         renderizarPacientes(pacientesGlobal);
       }
 
-      // Renderizar pacientes internados
       function renderizarPacientes(pacientes) {
         const lista = document.getElementById('internados-lista');
         lista.innerHTML = '';
@@ -123,7 +119,6 @@ html(lang="es")
         });
       }
 
-      // Dar alta paciente internado
       async function darAlta(internacionId, camaId, dni) {
         const confirmar = confirm("¿Deseás dar de alta al paciente?");
         if (!confirmar) return;
@@ -142,7 +137,6 @@ html(lang="es")
         setTimeout(() => fila.remove(), 500);
       }
 
-      // Buscador pacientes internados
       document.getElementById('buscador').addEventListener('input', e => {
         const termino = e.target.value.toLowerCase();
         const filtrados = pacientesGlobal.filter(p =>
@@ -169,16 +163,16 @@ html(lang="es")
 
         pacientes.forEach(p => {
           const fila = document.createElement('tr');
-          fila.id = `fila-emergencia-${p.emergencia_id}`;
+          fila.id = `fila-emergencia-${p.id_emergencia}`;
           fila.innerHTML = `
             <td>${p.observacion}</td>
             <td>${p.dni_falso}</td>
             <td>${p.id_cama}</td>
             <td>${new Date(p.fecha_ingreso).toLocaleString()}</td>
             <td>
-                <button onclick="editarPaciente('${p.id_emergencia}')">Editar</button>
-                <button disabled id="btn-trasladar-${p.id_emergencia}">Trasladar</button>
-                <button disabled id="btn-alta-${p.id_emergencia}" onclick="darAltaEmergencia('${p.emergencia_id}', '${p.cama_emergencia_id}', '${p.dni}')">Dar Alta</button>
+                <button onclick="editarPaciente('${p.id_emergencia}')">Agendar</button>
+                <button ${p.dni_falso.startsWith('EMERG') ? 'disabled' : ''} id="btn-trasladar-${p.id_emergencia}" onclick="trasladarPaciente('${p.id_emergencia}', '${p.id_cama}', '${p.dni_falso}')">Trasladar</button>
+                <button ${p.dni_falso.startsWith('EMERG') ? 'disabled' : ''} id="btn-alta-${p.id_emergencia}" onclick="darAltaEmergencia('${p.id_emergencia}', '${p.id_cama}', '${p.dni_falso}')">Dar Alta</button>
             </td>
           `;
           listaEmergencia.appendChild(fila);
@@ -189,10 +183,10 @@ html(lang="es")
         const confirmar = confirm("¿Deseás dar de alta al paciente de emergencia?");
         if (!confirmar) return;
 
-        const res = await fetch('/internaciones/dar-alta-emergencia', {
+        const res = await fetch('/internaciones/alta-emergencia', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ emergencia_id: emergenciaId, cama_id: camaEmergenciaId })
+          body: JSON.stringify({ id_emergencia: emergenciaId, cama_id: camaEmergenciaId })
         });
 
         const data = await res.json();
@@ -203,7 +197,6 @@ html(lang="es")
         setTimeout(() => fila.remove(), 500);
       }
 
-      // Buscador pacientes emergencia
       document.getElementById('buscador-emergencia').addEventListener('input', e => {
         const termino = e.target.value.toLowerCase();
         const filtrados = pacientesEmergenciaGlobal.filter(p =>
@@ -227,5 +220,78 @@ html(lang="es")
             document.getElementById(`btn-alta-${idEmergencia}`).disabled = false;
 
             alert("Paciente editado. Ahora puede trasladar o dar el alta");
+        }
+      }
+
+      async function editarPaciente(idEmergencia) {
+        const nuevoDni = prompt("Ingrese el DNI real del paciente:");
+
+        if (!nuevoDni || isNaN(nuevoDni)) {
+          alert("DNI inválido.");
+          return;
+        }
+
+        try {
+          const res = await fetch('/internaciones/asignar-dni', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_emergencia: Number(idEmergencia), nuevo_dni: Number(nuevoDni) })
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            alert(data.mensaje);
+
+            const fila = document.getElementById(`fila-emergencia-${idEmergencia}`);
+            if(!fila){
+              alert("No se encontro la fila del paciente para actualizar");
+              return;
+            }
+            const celdas = fila.getElementsByTagName("td");
+            celdas[1].textContent = nuevoDni;
+
+            const btnTrasladar = document.getElementById(`btn-trasladar-${idEmergencia}`);
+            if (btnTrasladar) btnTrasladar.disabled = false;
+
+            const btnAlta = document.getElementById(`btn-alta-${idEmergencia}`);
+            if (btnAlta) btnAlta.disabled = false;
+
+
+            const btnAgendar = fila.querySelector("button[onclick^='editarPaciente']");
+            if (btnAgendar) btnAgendar.style.display = 'none';
+
+          } else {
+            alert(data.error || "Ocurrió un error");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error al asignar DNI");
+        }
+      }
+
+      async function trasladarPaciente(idEmergencia, camaEmergenciaId, dni) {
+        const confirmar = confirm("¿Deseás trasladar al paciente a asignar otra cama?");
+        if (!confirmar) return;
+
+        const res = await fetch('/internaciones/alta-emergencia', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_emergencia: idEmergencia, cama_id: camaEmergenciaId })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(data.mensaje);
+
+          const fila = document.getElementById(`fila-emergencia-${idEmergencia}`);
+          fila.classList.add('desaparecer');
+          setTimeout(() => fila.remove(), 500);
+
+          window.location.href = `/camas/asignar_cama`;
+
+        } else {
+          alert(data.error || "Error al intentar trasladar al paciente.");
         }
       }
