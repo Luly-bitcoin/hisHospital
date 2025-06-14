@@ -2,29 +2,35 @@ import pool from '../config/db.js';
 
 export async function obtenerPacientesDisponibles() {
   const [result] = await pool.query(`
-    SELECT * FROM pacientes
-    WHERE dni NOT IN (
-      SELECT dni_pacientes FROM internaciones WHERE fecha_egreso IS NULL
-      UNION
-      SELECT dni_pacientes FROM emergencias WHERE fecha_egreso IS NULL
+    SELECT p.id, p.nombre_completo
+    FROM pacientes p
+    WHERE NOT EXISTS (
+      SELECT 1 FROM internaciones i
+      WHERE i.dni_pacientes = p.id AND i.fecha_egreso IS NULL
     )
   `);
   return result;
 }
 
 export async function asignarPacienteACama(camaId, pacienteId, tipo_ingreso) {
-  const [cama] = await pool.query('SELECT estado FROM camas WHERE id = ?', [camaId]);
-  if (cama.length === 0) throw new Error('Cama no encontrada');
-  if (cama[0].estado !== 'libre') throw new Error('Cama no disponible');
+  const [rows] = await pool.query('SELECT estado FROM camas WHERE id = ?', [camaId]);
 
-  const fechaIngreso = new Date(); 
+  if (rows.length === 0) throw new Error('Cama no encontrada');
+
+  const cama = rows[0];
+
+  if (cama.estado !== 'libre') throw new Error('Cama no disponible');
+
+  const fechaIngreso = new Date();
+
   await pool.query(
-    `INSERT INTO internaciones (dni_pacientes, id_cama, tipo_ingreso, fecha_ingreso) VALUES (?, ?, ?, ?)`,
-    [pacienteId, camaId, tipo_ingreso, fechaIngreso]
+    `INSERT INTO internaciones (dni_pacientes, id_cama, tipo_ingreso, fecha_ingreso, observaciones) VALUES (?, ?, ?, ?, ?)`,
+    [pacienteId, camaId, tipo_ingreso, fechaIngreso, '']
   );
 
   await pool.query('UPDATE camas SET estado = ? WHERE id = ?', ['ocupada', camaId]);
 }
+
 
 export async function egresarPaciente(pacienteId) {
   const fechaEgreso = new Date();

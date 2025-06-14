@@ -34,8 +34,6 @@ router.post('/asignar-paciente', async (req, res) => {
   try {
     console.log('Datos recibidos: ', req.body);
     const { camaId, pacienteId, tipo_ingreso } = req.body;
-    console.log('Asignando paciente:', pacienteId, 'a cama:', camaId);
-    
     await asignarPacienteACama(camaId, pacienteId, tipo_ingreso);
     res.status(200).send('Asignación exitosa');
   } catch (error) {
