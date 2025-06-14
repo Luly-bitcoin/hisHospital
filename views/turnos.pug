@@ -49,6 +49,8 @@ html(lang="es")
       br
       .formulario-box
         h2 Registrar Turno
+        if error 
+          .error-msg(style="color: red; font-weight: bold; margin-bottom: 10px") #{error}
         br
         form(id="formTurno", action="/turnos/registrar" method="POST")
           .input-group
@@ -103,6 +105,7 @@ html(lang="es")
                 option(value=medico.dni)= medico.nombre + " (" + medico.especialidad + ")"
 
           button.boton(type="submit") Registrar Turno
+          
 
     script.
         async function buscarPaciente() {
