@@ -23,7 +23,6 @@ Vercel
 
 Links:
 
-Git: [https://github.com/usuario/his-hospital](https://github.com/usuario/his-hospital)
-Vercel: [https://his-hospital.vercel.app/admision](https://his-hospital.vercel.app/admision)
-Video: [https://youtu.be/XXXXXXXX](https://youtu.be/XXXXXXXX)
-
+Git: https://github.com/Luly-bitcoin/hisHospital.git
+Vercel: https://vercel.com/luly-bitcoins-projects/his-hospital-dsk4
+Railway: https://railway.com/project/e5aa3c1c-f2b1-472f-acba-5474214c9c96?environmentId=7513efbd-b90b-426b-b101-e59b066df6a4
