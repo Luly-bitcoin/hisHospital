@@ -22,7 +22,7 @@ export async function guardarEmergencia(req, res) {
     return res.status(400).send("Faltan campos obligatorios.");
   }
 
-  const dniFalso = 'EMERG-' + uuidv4().slice(0, 8).toUpperCase(); // ej: EMERG-1A2B3C4D
+  const dniFalso = 'EMERG-' + uuidv4().slice(0, 8).toUpperCase(); 
   const fechaIngreso = new Date();
   const fechaStr = fechaIngreso.toISOString().slice(0, 19).replace('T', ' ');
 

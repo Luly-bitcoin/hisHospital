@@ -39,7 +39,6 @@ export const registrarTurno = async (req, res) => {
       return res.redirect('/turnos?error=No se puede agendar un turno en el pasado');
     }
 
-    // Mover esta línea ANTES de usarla
     const [existente] = await pool.query(
       `SELECT * FROM turnos WHERE dni_medico = ? AND fecha_turno = ? AND hora_turno = ?`,
       [dni_medico, fecha_turno, hora_turno]
