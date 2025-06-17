@@ -160,6 +160,14 @@ html(lang="es")
       select{
         width: 100%;
       }
+      .cam.ocupada.cama-emergencia{
+        background-color: red;
+        opacity: 0.7;
+      }
+      .cam.higienizando.cama-emergencia.higienizando{
+        background-color: yellow;
+        opacity: 0.7;
+      }
 
   body
     header
@@ -208,7 +216,7 @@ html(lang="es")
                             h2 Habitacion #{habitacion.id} 
                             .cam-container 
                                 each cama in habitacion.camas 
-                                    .cam.cama-emergencia(data-id=cama.id)
+                                    .cam.cama-emergencia(data-id=cama.id data-estado=cama.estado)
                                      h2= cama.id 
                                      img(src="/img/cama.png" alt=`Cama Emergencia ${cama.id}`)
 
@@ -239,7 +247,7 @@ html(lang="es")
             alert('No se pudo cargar la lista de pacientes.');
           });
       }
-      $('.cam').each(function () {
+      $('.cam, .cama-emergencia').each(function () {
         const estado = $(this).data('estado');
         if (estado === 'ocupada') {
           $(this).addClass('ocupada').css('pointer-events', 'none');
