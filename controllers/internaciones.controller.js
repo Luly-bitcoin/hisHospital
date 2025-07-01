@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 
+
 export async function obtenerPacientesInternados(req, res) {
   try {
     const [pacientes] = await pool.query(`
@@ -10,12 +11,14 @@ export async function obtenerPacientesInternados(req, res) {
         c.id AS id_cama,
         i.id AS internacion_id,
         c.id AS cama_id,
-        i.fecha_ingreso
+        i.fecha_ingreso,
+        ev.id AS evaluacion_id
       FROM internaciones i
       JOIN pacientes p ON p.dni = i.dni_pacientes
       JOIN camas c ON c.id = i.id_cama
       JOIN habitaciones h ON h.id = c.habitacion_id
       JOIN alas a ON a.id = h.ala_id
+      LEFT JOIN evaluaciones_enfermeria ev ON ev.internacion_id = i.id
       WHERE i.fecha_egreso IS NULL
     `);
     res.json(pacientes);
@@ -137,5 +140,67 @@ export async function asignarDniReal(req, res) {
   } catch (error) {
     console.error('Error al asignar DNI real:', error);
     res.status(500).json({ error: 'Error interno al asignar el DNI.' });
+  }
+}
+
+
+export async function obtenerHistorialMedico(req, res) {
+  const { evaluacionId } = req.params;
+
+  try {
+    // Traer historial_medico
+    const [historialRows] = await pool.query(
+      'SELECT * FROM historial_medico WHERE evaluacion_id = ?',
+      [evaluacionId]
+    );
+    const historial = historialRows.length > 0 ? historialRows[0] : {};
+
+    // Traer motivo_internacion
+    const [motivoRows] = await pool.query(
+      'SELECT motivo FROM motivo_internacion WHERE evaluacion_id = ?',
+      [evaluacionId]
+    );
+    const motivo = motivoRows.length > 0 ? motivoRows[0].motivo : null;
+
+    // Traer plan_cuidados
+    const [cuidadosRows] = await pool.query(
+      'SELECT intervenciones FROM plan_cuidados WHERE evaluacion_id = ?',
+      [evaluacionId]
+    );
+    const intervenciones = cuidadosRows.length > 0 ? cuidadosRows[0].intervenciones : null;
+
+    res.json({
+      ...historial,
+      motivo,
+      intervenciones
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error al obtener historial' });
+  }
+}
+
+
+export async function guardarHistorialMedico(req, res) {
+  const {
+    evaluacion_id,
+    enfermedades_previas,
+    cirugias_previas,
+    alergias,
+    medicamentos_actuales,
+    antecedentes_familiares
+  } = req.body;
+
+  try {
+    await pool.query(
+      `INSERT INTO historial_medico (evaluacion_id, enfermedades_previas, cirugias_previas, alergias, medicamentos_actuales, antecedentes_familiares)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [evaluacion_id, enfermedades_previas, cirugias_previas, alergias, medicamentos_actuales, antecedentes_familiares]
+    );
+
+    res.status(200).json({ mensaje: 'Historial médico guardado correctamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error al guardar historial médico' });
   }
 }

@@ -56,3 +56,4 @@ export async function egresarPaciente(pacienteId) {
     WHERE id = ?
   `, [camaId]);
 }
+

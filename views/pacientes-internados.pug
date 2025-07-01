@@ -70,6 +70,32 @@ html(lang="es")
             th Fecha de Ingreso
             th Acción
         tbody#internados-lista
+        div#modalFichaMedica(style="display:none; position:fixed; top:20%; left:35%; background:white; padding:20px; border:1px solid #ccc; max-width:80%; z-index:1000; overflow-y:auto; max-height:90vh;width: 30%;")
+          h3 Ficha Clínica
+          br
+          div
+            strong Motivo:
+            p#motivo_text
+            br
+          div
+            strong Cirugías Previas:
+            p#cirugias_previas_text
+            br
+          div
+            strong Alergias:
+            p#alergias_text
+            br
+          div
+            strong Medicación Actual:
+            p#medicamentos_actuales_text
+            br
+          div
+            strong Intervenciones:
+            p#intervenciones_text
+          br
+          button#btnAgregarFichaMedica(type="button") Agregar / Editar Ficha Médica
+          button(type="button", onclick="cerrarFichaMedica()") Cerrar
+
 
     h2 Lista de Pacientes en Camas de Emergencia
     #emergencia-container
@@ -87,6 +113,7 @@ html(lang="es")
     script.
       let pacientesGlobal = [];
       let pacientesEmergenciaGlobal = [];
+      let dniHistorialActual = null;
 
       async function cargarPacientesInternados() {
         const res = await fetch('/internaciones/internados');
@@ -113,7 +140,13 @@ html(lang="es")
             <td>${p.id_habitacion}</td>
             <td>${p.id_cama}</td>
             <td>${new Date(p.fecha_ingreso).toLocaleString()}</td>
-            <td><button onclick="darAlta('${p.internacion_id}', '${p.cama_id}', '${p.dni}')">Dar Alta</button></td>
+            <td>
+              ${p.evaluacion_id ? 
+                `<button onclick="mostrarFichaMedica('${p.evaluacion_id}')">Ver Ficha Clínica</button>` :
+                `<button onclick="crearFichaMedica('${p.internacion_id}', '${p.dni}')">Crear Ficha Clínica</button>`
+              }
+              <button onclick="darAlta('${p.internacion_id}', '${p.cama_id}', '${p.dni}')">Dar Alta</button>
+            </td>
           `;
           lista.appendChild(fila);
         });
@@ -294,4 +327,94 @@ html(lang="es")
         } else {
           alert(data.error || "Error al intentar trasladar al paciente.");
         }
+      }
+      function mostrarFichaMedica(evaluacionId) {
+        fetch(`/internaciones/historial-medico/${evaluacionId}`)
+          .then(res => {
+            if (!res.ok) throw new Error('No existe historial');
+            return res.json();
+          })
+          .then(data => {
+            document.getElementById('motivo_text').textContent = data.motivo || '-';
+            document.getElementById('cirugias_previas_text').textContent = data.cirugias_previas || '-';
+            document.getElementById('alergias_text').textContent = data.alergias || '-';
+            document.getElementById('medicamentos_actuales_text').textContent = data.medicamentos_actuales || '-';
+            document.getElementById('intervenciones_text').textContent = data.intervenciones || '-';
+
+            // Mostrar botón Agregar solo si no hay ficha
+            const btnAgregar = document.getElementById('btnAgregarFichaMedica');
+            if (!data || Object.values(data).every(v => !v)) {
+              btnAgregar.style.display = 'inline-block';
+            } else {
+              btnAgregar.style.display = 'none';
+            }
+
+            // Asignar evento para ir a la vista de agregar/editar ficha
+            btnAgregar.onclick = () => {
+              window.location.href = `/internaciones/ficha-medica/editar/${evaluacionId}`;
+            };
+
+            document.getElementById('modalFichaMedica').style.display = 'block';
+          })
+          .catch(() => {
+            // No hay ficha
+            document.getElementById('motivo_text').textContent = '-';
+            document.getElementById('cirugias_previas_text').textContent = '-';
+            document.getElementById('alergias_text').textContent = '-';
+            document.getElementById('medicamentos_actuales_text').textContent = '-';
+            document.getElementById('intervenciones_text').textContent = '-';
+
+            const btnAgregar = document.getElementById('btnAgregarFichaMedica');
+            btnAgregar.style.display = 'inline-block';
+            btnAgregar.onclick = () => {
+              window.location.href = `/internaciones/ficha-medica/editar/${evaluacionId}`;
+            };
+
+            document.getElementById('modalFichaMedica').style.display = 'block';
+          });
+      }
+
+      function guardarFichaMedica() {
+        const form = document.forms["formFichaMedica"];
+        const datos = {
+          evaluacion_id: form.evaluacion_id.value,
+          enfermedades_previas: form.enfermedades_previas.value,
+          cirugias_previas: form.cirugias_previas.value,
+          alergias: form.alergias.value,
+          medicamentos_actuales: form.medicamentos_actuales.value,
+          antecedentes_familiares: form.antecedentes_familiares.value
+        };
+
+        fetch('/internaciones/historial-medico', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos)
+        })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.mensaje);
+            cerrarFichaMedica();
+          })
+          .catch(() => alert("Error al guardar ficha médica"));
+      }
+
+
+      
+      function crearFichaMedica(internacionId, dniPaciente) {
+        fetch('/internaciones/evaluaciones/crear', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ internacion_id: internacionId, dni_paciente: dniPaciente, dni_medico: '12345678' }) // Reemplazá por el usuario logueado
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.evaluacion_id) {
+            window.location.href = `/internaciones/ficha-medica/editar/${data.evaluacion_id}`;
+          } else {
+            alert("No se pudo crear la evaluación.");
+          }
+        });
+      }
+      function cerrarFichaMedica(){
+        document.getElementById('modalFichaMedica').style.display = 'none';
       }

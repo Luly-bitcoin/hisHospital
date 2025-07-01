@@ -1,0 +1,142 @@
+extends layout
+
+block content
+  style.
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f8ff;
+      padding: 40px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #2a8df2;
+      text-align: center;
+    }
+    form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 800px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+    textarea, input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 25px;
+      background-color: #2a8df2;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1a5ecc;
+    }
+    .cancelar {
+      margin-left: 15px;
+      background-color: #f44336;
+      text-decoration: none;
+      padding: 12px 25px;
+      border-radius: 6px;
+      color: white;
+      font-size: 16px;
+      display: inline-block;
+    }
+    .cancelar:hover {
+      background-color: #b82a1d;
+    }
+
+  h1 Agregar / Editar Ficha Completa del Paciente
+
+  form(method="POST", action=`/internaciones/ficha-medica/editar/${evaluacionId}`)
+    input(type="hidden", name="redirectTo", value=referer)
+    h2 Ficha Medica de #{nombre_paciente} (DNI: #{dni_paciente})
+    h3 Atendido por el Dr. #{nombre_medico}
+    // Datos del paciente y del medico
+    label DNI del Paciente:
+    input(type="text", name="dni_paciente", value=dni_paciente, readonly)
+
+    label Nombre del Paciente:
+    input(type="text", name="nombre_paciente", value=nombre_paciente, readonly)
+
+    label Médico Responsable:
+    input(type="text", name="nombre_medico", value=nombre_medico, readonly)
+
+    // Motivo de Internación
+    h2 Motivo de Internación
+    label Motivo:
+    textarea(name="motivo") #{motivo}
+
+    label Síntomas:
+    textarea(name="sintomas") #{sintomas}
+
+    // Historial Médico
+    h2 Historial Médico
+    label Enfermedades Previas:
+    textarea(name="enfermedades_previas") #{enfermedades_previas}
+
+    label Cirugías Previas:
+    textarea(name="cirugias_previas") #{cirugias_previas}
+
+    label Alergias:
+    textarea(name="alergias") #{alergias}
+
+    label Medicación Actual:
+    textarea(name="medicamentos_actuales") #{medicamentos_actuales}
+
+    label Antecedentes Familiares:
+    textarea(name="antecedentes_familiares") #{antecedentes_familiares}
+
+    // Observaciones Generales
+    h2 Observaciones Generales
+    label Observaciones:
+    textarea(name="observaciones") #{observaciones}
+
+    // Plan de Cuidados
+    h2 Plan de Cuidados
+    label Intervenciones:
+    textarea(name="intervenciones") #{intervenciones}
+
+    label Medicamentos:
+    textarea(name="medicamentos") #{cuidados_medicamentos}
+
+    label Comunicación:
+    textarea(name="comunicacion") #{comunicacion}
+
+    // Signos Vitales
+    h2 Signos Vitales al Ingreso
+    label Presión Arterial:
+    input(type="text", name="presion_arterial", value=presion_arterial)
+
+    label Frecuencia Cardíaca:
+    input(type="number", name="frecuencia_cardiaca", value=frecuencia_cardiaca)
+
+    label Frecuencia Respiratoria:
+    input(type="number", name="frecuencia_respiratoria", value=frecuencia_respiratoria)
+
+    label Temperatura:
+    input(type="number", step="0.1", name="temperatura", value=temperatura)
+
+    label Observaciones:
+    textarea(name="signos_observaciones") #{signos_observaciones}
+
+    button(type="submit") Guardar Ficha
+    a.cancelar(href="/internaciones") Cancelar
